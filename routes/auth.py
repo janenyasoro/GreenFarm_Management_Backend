@@ -1,8 +1,9 @@
 # routes/auth.py
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, jwt_required
 from extensions import db, bcrypt
 from models import User
+from routes.helpers import get_user_id
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/api/auth')
 
@@ -17,11 +18,11 @@ def register():
         if not data:
             return jsonify({"error": "No data provided"}), 400
         
-        # Get fields from request - using the correct field names from your User model
+        # Get fields from request
         full_name = data.get('full_name')
         email = data.get('email')
         password = data.get('password')
-        role = data.get('role', 'owner')  # Default to 'owner' if not provided
+        role = data.get('role', 'owner')
         
         # Validate required fields
         if not full_name:
@@ -40,14 +41,14 @@ def register():
         if User.query.filter_by(email=email).first():
             return jsonify({"error": "Email already registered"}), 400
         
-        # Create new user - using the fields from your User model
+        # Create new user
         hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
         user = User(
             full_name=full_name,
             email=email,
-            password_hash=hashed_password,  # Note: password_hash, not password
+            password_hash=hashed_password,
             role=role,
-            is_active=True  # Default to active
+            is_active=True
         )
         
         db.session.add(user)
@@ -60,6 +61,7 @@ def register():
         
     except Exception as e:
         db.session.rollback()
+        print(f"❌ Registration error: {str(e)}")
         return jsonify({"error": f"Registration failed: {str(e)}"}), 500
 
 
@@ -92,12 +94,12 @@ def login():
         if not user.is_active:
             return jsonify({"error": "Account is deactivated. Please contact support."}), 401
         
-        # Check password - using password_hash field
+        # Check password
         if not bcrypt.check_password_hash(user.password_hash, password):
             return jsonify({"error": "Invalid email or password"}), 401
         
         # Create access token
-        access_token = create_access_token(identity=user.id)
+        access_token = create_access_token(identity=str(user.id))
         
         return jsonify({
             "access_token": access_token,
@@ -106,6 +108,7 @@ def login():
         }), 200
         
     except Exception as e:
+        print(f"❌ Login error: {str(e)}")
         return jsonify({"error": f"Login failed: {str(e)}"}), 500
 
 
@@ -114,15 +117,20 @@ def login():
 def get_profile():
     """Get current user profile"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_user_id()
+        print(f"👤 Getting profile for user ID: {user_id}")
+        
         user = User.query.get(user_id)
         
         if not user:
+            print(f"❌ User not found: {user_id}")
             return jsonify({"error": "User not found"}), 404
         
+        print(f"✅ User found: {user.full_name} ({user.email})")
         return jsonify(user.to_dict()), 200
         
     except Exception as e:
+        print(f"❌ Profile error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 
@@ -131,7 +139,7 @@ def get_profile():
 def update_profile():
     """Update current user profile"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_user_id()
         user = User.query.get(user_id)
         
         if not user:
@@ -154,7 +162,6 @@ def update_profile():
             user.email = data['email']
         
         if 'role' in data:
-            # Only allow role change for admins (you might want to add extra checks)
             user.role = data['role']
         
         db.session.commit()
@@ -166,6 +173,7 @@ def update_profile():
         
     except Exception as e:
         db.session.rollback()
+        print(f"❌ Profile update error: {str(e)}")
         return jsonify({"error": f"Update failed: {str(e)}"}), 500
 
 
@@ -174,7 +182,7 @@ def update_profile():
 def change_password():
     """Change user password"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_user_id()
         user = User.query.get(user_id)
         
         if not user:
@@ -207,6 +215,7 @@ def change_password():
         
     except Exception as e:
         db.session.rollback()
+        print(f"❌ Password change error: {str(e)}")
         return jsonify({"error": f"Password change failed: {str(e)}"}), 500
 
 
@@ -215,7 +224,7 @@ def change_password():
 def deactivate_account():
     """Deactivate user account (soft delete)"""
     try:
-        user_id = get_jwt_identity()
+        user_id = get_user_id()
         user = User.query.get(user_id)
         
         if not user:
@@ -228,6 +237,7 @@ def deactivate_account():
         
     except Exception as e:
         db.session.rollback()
+        print(f"❌ Deactivation error: {str(e)}")
         return jsonify({"error": f"Deactivation failed: {str(e)}"}), 500
 
 
@@ -237,7 +247,7 @@ def activate_account(user_id):
     """Activate a user account (admin only)"""
     try:
         # Get current user to check role
-        current_user_id = get_jwt_identity()
+        current_user_id = get_user_id()
         current_user = User.query.get(current_user_id)
         
         if not current_user or current_user.role not in ['admin', 'owner']:
@@ -258,6 +268,7 @@ def activate_account(user_id):
         
     except Exception as e:
         db.session.rollback()
+        print(f"❌ Activation error: {str(e)}")
         return jsonify({"error": f"Activation failed: {str(e)}"}), 500
 
 
@@ -267,7 +278,7 @@ def list_users():
     """List all users (admin only)"""
     try:
         # Get current user to check role
-        current_user_id = get_jwt_identity()
+        current_user_id = get_user_id()
         current_user = User.query.get(current_user_id)
         
         if not current_user or current_user.role not in ['admin', 'owner']:
@@ -277,4 +288,34 @@ def list_users():
         return jsonify([user.to_dict() for user in users]), 200
         
     except Exception as e:
+        print(f"❌ List users error: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+
+# Debug endpoint to check user data
+@auth_bp.route('/debug/user', methods=['GET'])
+@jwt_required()
+def debug_user():
+    """Debug endpoint to check user data"""
+    try:
+        user_id = get_user_id()
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
+        # Return raw user data for debugging
+        return jsonify({
+            "id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "role": user.role,
+            "is_active": user.is_active,
+            "created_at": user.created_at.isoformat() if user.created_at else None,
+            "password_hash": user.password_hash[:20] + "..." if user.password_hash else None,
+            "to_dict_result": user.to_dict()
+        }), 200
+        
+    except Exception as e:
+        print(f"❌ Debug error: {str(e)}")
         return jsonify({"error": str(e)}), 500

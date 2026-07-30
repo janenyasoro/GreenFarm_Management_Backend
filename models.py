@@ -1,3 +1,4 @@
+# models.py
 from datetime import datetime
 from extensions import db
 
@@ -13,10 +14,11 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationship to farms - this is the main relationship
+    # Relationships
     farms = db.relationship("Farm", backref="owner", lazy=True, cascade="all, delete-orphan")
 
     def to_dict(self):
+        """Convert user object to dictionary"""
         return {
             "id": self.id,
             "full_name": self.full_name,
@@ -37,6 +39,7 @@ class Farm(db.Model):
     owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationships
     crops = db.relationship("Crop", backref="farm", lazy=True, cascade="all, delete-orphan")
     livestock = db.relationship("Livestock", backref="farm", lazy=True, cascade="all, delete-orphan")
     expenses = db.relationship("Expense", backref="farm", lazy=True, cascade="all, delete-orphan")
@@ -45,6 +48,7 @@ class Farm(db.Model):
     tasks = db.relationship("Task", backref="farm", lazy=True, cascade="all, delete-orphan")
 
     def to_dict(self):
+        """Convert farm object to dictionary"""
         return {
             "id": self.id,
             "name": self.name,
@@ -74,6 +78,7 @@ class Crop(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
+        """Convert crop object to dictionary"""
         return {
             "id": self.id,
             "farm_id": self.farm_id,
@@ -103,11 +108,13 @@ class Livestock(db.Model):
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    # Relationships
     health_records = db.relationship(
         "HealthRecord", backref="animal", lazy=True, cascade="all, delete-orphan"
     )
 
     def to_dict(self):
+        """Convert livestock object to dictionary"""
         return {
             "id": self.id,
             "farm_id": self.farm_id,
@@ -135,6 +142,7 @@ class HealthRecord(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
+        """Convert health record object to dictionary"""
         return {
             "id": self.id,
             "livestock_id": self.livestock_id,
@@ -159,6 +167,7 @@ class Expense(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
+        """Convert expense object to dictionary"""
         return {
             "id": self.id,
             "farm_id": self.farm_id,
@@ -181,6 +190,7 @@ class Income(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
+        """Convert income object to dictionary"""
         return {
             "id": self.id,
             "farm_id": self.farm_id,
@@ -204,6 +214,7 @@ class Inventory(db.Model):
     last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def to_dict(self):
+        """Convert inventory object to dictionary"""
         return {
             "id": self.id,
             "farm_id": self.farm_id,
@@ -229,6 +240,7 @@ class Task(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def to_dict(self):
+        """Convert task object to dictionary"""
         return {
             "id": self.id,
             "farm_id": self.farm_id,

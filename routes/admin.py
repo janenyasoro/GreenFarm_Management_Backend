@@ -1,10 +1,11 @@
 from functools import wraps
 
 from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required
 
 from extensions import db
 from models import User, Farm, Crop, Livestock, Task
+from routes.helpers import get_user_id
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 
@@ -12,7 +13,7 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/api/admin")
 def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        user_id = get_jwt_identity()
+        user_id = get_user_id()
         user = User.query.get(user_id)
         if not user or user.role != "admin":
             return jsonify({"error": "Admin access required"}), 403

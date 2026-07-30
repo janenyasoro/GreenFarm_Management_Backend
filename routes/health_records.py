@@ -1,11 +1,11 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-
 from extensions import db
 from models import HealthRecord, Livestock
-from routes.helpers import get_current_farm, parse_date
+from .helpers import get_current_farm, parse_date
+from datetime import datetime
 
-health_bp = Blueprint("health_records", __name__, url_prefix="/api")
+health_bp = Blueprint("health", __name__, url_prefix="/api/health")
 
 
 def _verify_animal_ownership(livestock_id):

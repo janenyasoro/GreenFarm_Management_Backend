@@ -8,5 +8,6 @@ class Config:
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///greenharvest.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-key-change-in-production'
+    JWT_VERIFY_SUB = False
     JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour
     FRONTEND_ORIGIN = os.environ.get('FRONTEND_ORIGIN') or 'http://localhost:3000'

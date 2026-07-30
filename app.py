@@ -1,8 +1,6 @@
 from flask import Flask, jsonify
-
 from config import Config
 from extensions import db, migrate, jwt, bcrypt, cors
-
 
 def create_app():
     app = Flask(__name__)
@@ -13,12 +11,22 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
     bcrypt.init_app(app)
-    cors.init_app(app, resources={r"/api/*": {"origins": app.config["FRONTEND_ORIGIN"]}})
+    
+    # Configure CORS - allow frontend origins
+    cors.init_app(app, resources={
+        r"/api/*": {
+            "origins": ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization", "Accept"],
+            "expose_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
+        }
+    })
 
     # Import models so Flask-Migrate can detect them
     import models  # noqa: F401
 
-    # Register blueprints - MOVED INSIDE the function
+    # Register blueprints
     from routes.auth import auth_bp
     from routes.crops import crops_bp
     from routes.livestock import livestock_bp
@@ -41,27 +49,6 @@ def create_app():
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(admin_bp)
 
-    # Root route
-    @app.route('/')
-    def home():
-        return jsonify({
-            "service": "GreenHarvest API",
-            "version": "1.0.0",
-            "status": "running",
-            "endpoints": {
-                "auth": "/api/auth",
-                "livestock": "/api/livestock",
-                "crops": "/api/crops",
-                "health_records": "/api/livestock/{id}/health-records",
-                "expenses": "/api/expenses",
-                "income": "/api/income",
-                "inventory": "/api/inventory",
-                "tasks": "/api/tasks",
-                "dashboard": "/api/dashboard",
-                "admin": "/api/admin",
-            }
-        })
-
     @app.get("/api/health")
     def health_check():
         return jsonify({"status": "ok", "service": "GreenHarvest API"})
@@ -76,8 +63,6 @@ def create_app():
 
     return app
 
-
-# Create app instance
 app = create_app()
 
 if __name__ == "__main__":
