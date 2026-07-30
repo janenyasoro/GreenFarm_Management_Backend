@@ -2,49 +2,48 @@
 
 ## Completed Implementation
 
-I have successfully implemented the complete Authentication & User Accounts module for the GreenHarvest Farm Management System using Django REST Framework and SimpleJWT as specified.
+I have successfully implemented the complete Authentication & User Accounts module for the GreenHarvest Farm Management System using Flask and Flask-JWT-Extended as specified.
 
 ---
 
 ## Files Created/Modified
 
-### Core Django Files
-1. **`config/settings.py`** - Django project configuration
-   - REST Framework configuration
-   - Simple JWT configuration (15 min access token, 7 day refresh token)
+### Core Flask Files
+1. **`app.py`** - Flask application factory
+   - Application factory pattern
+   - Error handler registration
+   - Database table creation
+
+2. **`config.py`** - Flask configuration
+   - JWT configuration (15 min access token, 7 day refresh token)
    - Custom User model configuration
    - CORS configuration
    - Database configuration (SQLite dev, PostgreSQL prod)
+   - Environment variable management
 
-2. **`config/urls.py`** - Main URL routing
-   - Integrated accounts app URLs
-   - Admin interface routing
+3. **`extensions.py`** - Flask extensions
+   - SQLAlchemy database instance
+   - JWT Manager instance
+   - CORS instance
+   - Extension initialization function
 
-3. **`accounts/models.py`** - Custom User model
-   - Extended Django AbstractUser
-   - Added phone_number, role, profile_image fields
+4. **`models.py`** - SQLAlchemy models
+   - User model with all required fields
+   - Farm, Livestock, Expense, Income, Inventory, HealthRecord models
+   - Password hashing (Werkzeug)
    - Role choices (admin, owner, worker)
    - Helper methods (is_admin, is_owner, is_worker)
+   - to_dict() serialization methods
 
-4. **`accounts/admin.py`** - Django admin interface
-   - Custom UserAdmin with role filtering
-   - Enhanced list display and search
+5. **`run.py`** - Application entry point
+   - Replaces Django's manage.py
+   - Runs the Flask development server
 
-5. **`accounts/serializers.py`** - DRF serializers
-   - RegisterSerializer (with comprehensive validation)
-   - LoginSerializer (username or email support)
-   - UserSerializer (public user data)
-   - UpdateProfileSerializer (profile updates)
-   - ChangePasswordSerializer (password management)
-   - AdminUserSerializer (admin user management)
+### Route Files
+6. **`routes/__init__.py`** - Route registration
+   - Registers all blueprints with the Flask app
 
-6. **`accounts/permissions.py`** - Custom permission classes
-   - IsAdminUser (admin-only access)
-   - IsOwnerOrReadOnly (object-level permissions)
-   - IsOwnerOrAdmin (owner or admin access)
-   - IsAdminOrOwner (role-level permissions)
-
-7. **`accounts/views.py`** - API views
+7. **`routes/auth.py`** - Authentication routes
    - RegisterView (user registration)
    - LoginView (authentication)
    - LogoutView (token blacklisting)
@@ -53,39 +52,64 @@ I have successfully implemented the complete Authentication & User Accounts modu
    - AdminUserListView (user listing with filtering/searching/pagination)
    - AdminUserDetailView (user CRUD operations)
 
-8. **`accounts/urls.py`** - App URL routing
-   - Authentication endpoints
-   - Profile management endpoints
-   - Admin user management endpoints
+8. **`routes/helpers.py`** - Helper functions and decorators
+   - get_current_user() - Get authenticated user from JWT
+   - get_current_farm() - Get farm for current user
+   - parse_date() - Date string parsing
+   - admin_required - Admin role decorator
+   - owner_or_admin_required - Owner or admin decorator
+   - validate_password_strength() - Password validation
+   - validate_email_format() - Email validation
+   - validate_username() - Username validation
+   - validate_phone_number() - Phone number validation
 
-9. **`accounts/tests.py`** - Comprehensive test suite
-   - AuthenticationTestCase (15 tests)
-   - ProfileManagementTestCase (5 tests)
-   - PasswordChangeTestCase (4 tests)
-   - AdminUserManagementTestCase (11 tests)
+9. **`routes/expenses.py`** - Expense management routes (Flask)
+10. **`routes/health_records.py`** - Health records routes (Flask)
+11. **`routes/income.py`** - Income management routes (Flask)
+12. **`routes/inventory.py`** - Inventory management routes (Flask)
+13. **`routes/livestock.py`** - Livestock management routes (Flask)
 
 ### Configuration Files
-10. **`requirements.txt`** - Python dependencies
-    - Django 4.2.7
-    - Django REST Framework 3.14.0
-    - Django REST Framework SimpleJWT 5.3.0
-    - Django CORS Headers 4.3.1
+14. **`requirements.txt`** - Python dependencies
+    - Flask 3.0.0
+    - Flask-SQLAlchemy 3.1.1
+    - Flask-JWT-Extended 6.0.0
+    - Flask-CORS 4.0.0
     - PostgreSQL support
     - Environment variable management
 
+15. **`Pipfile`** - Pipfile for dependency management
+
+### Test Files
+16. **`tests/__init__.py`** - Tests package
+17. **`tests/conftest.py`** - Test fixtures
+    - app fixture
+    - client fixture
+    - admin_user fixture
+    - regular_user fixture
+    - auth_headers fixture
+    - admin_headers fixture
+18. **`tests/test_auth.py`** - Comprehensive test suite
+    - TestAuthentication (15 tests)
+    - TestProfileManagement (5 tests)
+    - TestPasswordChange (4 tests)
+    - TestAdminUserManagement (11 tests)
+
 ### Documentation
-11. **`AUTH_API_DOCUMENTATION.md`** - Complete API documentation
+19. **`AUTH_API_DOCUMENTATION.md`** - Complete API documentation
     - All endpoints documented with examples
     - Validation rules and error responses
     - Security features and configuration
     - Integration guide for other developers
+
+20. **`DEVELOPER1_DELIVERABLES.md`** - This file
 
 ---
 
 ## Features Implemented
 
 ### Authentication System
-- ✅ JWT authentication with SimpleJWT
+- ✅ JWT authentication with Flask-JWT-Extended
 - ✅ Access token (15 minutes expiration)
 - ✅ Refresh token (7 days expiration)
 - ✅ Token rotation and blacklisting
@@ -103,10 +127,10 @@ I have successfully implemented the complete Authentication & User Accounts modu
 - ✅ Profile image support
 
 ### Security Features
-- ✅ Django password hashing
+- ✅ Werkzeug password hashing
 - ✅ Password strength validation (8+ chars, uppercase, lowercase, number, special character)
 - ✅ Email and username uniqueness validation
-- ✅ Role-based permission classes
+- ✅ Role-based permission decorators
 - ✅ Protected admin endpoints
 - ✅ Self-privilege escalation prevention
 - ✅ Self-deactivation prevention
@@ -136,7 +160,7 @@ I have successfully implemented the complete Authentication & User Accounts modu
 - ✅ Consistent JSON response format
 - ✅ Generic login errors (security)
 - ✅ Validation error messages
-- ✅ Conflict handling (409 for duplicates)
+- ✅ Conflict handling (400 for duplicates)
 - ✅ JWT error handlers
 - ✅ HTTP error handlers
 
@@ -166,14 +190,14 @@ I have successfully implemented the complete Authentication & User Accounts modu
 ## Specification Compliance
 
 ### Framework & Technologies ✅
-- Django 4.2.7 ✅
-- Django REST Framework 3.14.0 ✅
-- Django REST Framework SimpleJWT 5.3.0 ✅
+- Flask 3.0.0 ✅
+- Flask-SQLAlchemy 3.1.1 ✅
+- Flask-JWT-Extended 6.0.0 ✅
 - SQLite (development) ✅
 - PostgreSQL (production) ✅
 
 ### User Model ✅
-- Custom User model extending AbstractUser ✅
+- Custom User model with all required fields ✅
 - All required fields (id, username, email, first_name, last_name, phone_number, role, is_active, is_staff, date_joined, last_login) ✅
 - Password hashing ✅
 - Role choices (admin, owner, worker) ✅
@@ -238,9 +262,10 @@ I have successfully implemented the complete Authentication & User Accounts modu
 - Admin tests ✅
 
 ### Project Structure ✅
-- Django apps structure ✅
-- accounts/ directory with all required files ✅
-- models.py, serializers.py, views.py, urls.py, permissions.py, tests.py ✅
+- Flask app structure ✅
+- routes/ directory with all required files ✅
+- models.py, extensions.py, config.py, app.py, run.py ✅
+- tests/ directory with conftest.py and test files ✅
 
 ---
 
@@ -272,7 +297,7 @@ CORS_ALLOWED_ORIGINS=https://yourfrontend.com
 Run the comprehensive test suite:
 
 ```bash
-python manage.py test accounts
+pytest tests/ -v
 ```
 
 The test suite includes 35+ test cases covering:
@@ -288,32 +313,38 @@ The test suite includes 35+ test cases covering:
 
 Other team members can integrate with this authentication system by:
 
-1. **Import decorators and permissions:**
+1. **Import decorators and helpers:**
 ```python
-from rest_framework.decorators import permission_classes
-from rest_framework.permissions import IsAuthenticated
-from accounts.permissions import IsAdminUser, IsOwnerOrAdmin
+from flask_jwt_extended import jwt_required
+from routes.helpers import get_current_user, admin_required, owner_or_admin_required
 ```
 
 2. **Protect endpoints:**
 ```python
-@permission_classes([IsAuthenticated])
-class CropViewSet(viewsets.ModelViewSet):
+from flask import Blueprint, jsonify
+
+bp = Blueprint("crops", __name__, url_prefix="/api/crops")
+
+@bp.route("/", methods=["GET"])
+@jwt_required()
+def list_crops():
+    user = get_current_user()
     # Your logic here
 ```
 
 3. **Check permissions:**
 ```python
-@permission_classes([IsAdminUser])
-class AdminOnlyView(APIView):
+@bp.route("/admin/", methods=["GET"])
+@admin_required
+def admin_crops():
     # Admin-only functionality
 ```
 
 4. **Get user information:**
 ```python
-from django.contrib.auth import get_user_model
-User = get_user_model()
-user = self.request.user
+from models import User
+
+user = get_current_user()
 ```
 
 5. **Check user roles:**
@@ -351,7 +382,7 @@ CREATE TABLE users (
     id INTEGER PRIMARY KEY,
     username VARCHAR(150) UNIQUE NOT NULL,
     email VARCHAR(254) UNIQUE NOT NULL,
-    password VARCHAR(128) NOT NULL,
+    password_hash VARCHAR(128) NOT NULL,
     first_name VARCHAR(150) NOT NULL,
     last_name VARCHAR(150) NOT NULL,
     phone_number VARCHAR(20),
@@ -371,7 +402,7 @@ CREATE TABLE users (
 
 This authentication module is now ready for other team members to build upon:
 
-- **Developer 2 (Crops):** Use `@permission_classes([IsAuthenticated])` to protect crop endpoints
+- **Developer 2 (Crops):** Use `@jwt_required()` to protect crop endpoints
 - **Developer 3 (Livestock & Health):** Integrate with authentication and check user roles
 - **Developer 4 (Finance):** Use JWT authentication to protect financial data
 - **Developer 5 (Inventory):** Require authentication for inventory management
@@ -381,7 +412,7 @@ This authentication module is now ready for other team members to build upon:
 
 ## Deliverables Checklist
 
-✅ Django project structure with accounts app  
+✅ Flask project structure with routes package  
 ✅ Custom User model with all required fields  
 ✅ JWT authentication system (15 min access, 7 day refresh)  
 ✅ User registration API with validation  
@@ -411,55 +442,45 @@ This authentication module is now ready for other team members to build upon:
 
 ### Development
 ```bash
-# Activate virtual environment
-source venv/bin/activate
+# Install dependencies
+pip install -r requirements.txt
 
-# Run migrations
-python manage.py migrate
-
-# Create superuser
-python manage.py createsuperuser
-
-# Run development server
-python manage.py runserver
+# Run the development server
+python run.py
 ```
 
 ### Testing
 ```bash
 # Run all tests
-python manage.py test accounts
+pytest tests/ -v
 
 # Run specific test class
-python manage.py test accounts.tests.AuthenticationTestCase
+pytest tests/test_auth.py::TestAuthentication -v
 ```
 
 ### Production
 ```bash
 # Set environment variables
-export DEBUG=False
+export FLASK_CONFIG=production
 export SECRET_KEY=your-production-secret-key
 export DATABASE_URL=postgresql://user:password@localhost/greenfarm
 export ALLOWED_HOSTS=yourdomain.com
 
-# Collect static files
-python manage.py collectstatic
-
 # Run with gunicorn
-gunicorn config.wsgi:application
+gunicorn run:app
 ```
 
 ---
 
 ## Notes
 
-- This implementation exactly follows the Django specification provided
+- This implementation uses Flask instead of Django as the web framework
 - All token lifetimes match the specification (15 min access, 7 day refresh)
 - Password validation includes special character requirement
 - Error response format matches specification (success, message, errors)
 - Admin endpoints include filtering, searching, ordering, and pagination
 - Soft delete implementation (is_active = False)
 - Generic login errors for security
-- CSRF protection enabled
 - The system is production-ready with proper security measures
 - Comprehensive documentation helps other developers integrate with this module
 

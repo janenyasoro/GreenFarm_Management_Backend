@@ -2,9 +2,9 @@
 
 ## Overview
 
-This API provides comprehensive authentication and user management functionality for the GreenHarvest Farm Management System using Django REST Framework and SimpleJWT. All endpoints use JWT (JSON Web Tokens) for authentication and role-based access control.
+This API provides comprehensive authentication and user management functionality for the GreenHarvest Farm Management System using Flask and Flask-JWT-Extended. All endpoints use JWT (JSON Web Tokens) for authentication and role-based access control.
 
-**Base URL:** `http://localhost:8000/api/`
+**Base URL:** `http://localhost:5000/api/`
 
 **Authentication:** Bearer Token (JWT) - Include token in Authorization header: `Authorization: Bearer <token>`
 
@@ -491,7 +491,7 @@ Authorization: Bearer <access_token>
 ```json
 {
   "success": false,
-  "detail": "You do not have permission to perform this action."
+  "message": "You do not have permission to perform this action."
 }
 ```
 
@@ -542,7 +542,7 @@ Authorization: Bearer <access_token>
 ```json
 {
   "success": false,
-  "detail": "You do not have permission to perform this action."
+  "message": "You do not have permission to perform this action."
 }
 ```
 
@@ -644,7 +644,7 @@ Authorization: Bearer <access_token>
 ```json
 {
   "success": false,
-  "detail": "You do not have permission to perform this action."
+  "message": "You do not have permission to perform this action."
 }
 ```
 
@@ -712,7 +712,7 @@ Authorization: Bearer <access_token>
 ```json
 {
   "success": false,
-  "detail": "You do not have permission to perform this action."
+  "message": "You do not have permission to perform this action."
 }
 ```
 
@@ -815,9 +815,9 @@ All error responses follow this consistent format:
 
 ## Security Features
 
-1. **Password Hashing** - Uses Django's built-in password hashing
+1. **Password Hashing** - Uses Werkzeug's password hashing (bcrypt/pbkdf2)
 2. **JWT Authentication** - Token-based authentication with expiration
-3. **Token Blacklisting** - Logout functionality with token blacklisting
+3. **Token Blacklisting** - Logout functionality with token invalidation
 4. **CSRF Protection** - CSRF protection enabled where applicable
 5. **Role-Based Access Control** - Admin, Owner, Worker roles
 6. **Input Validation** - Comprehensive validation for all inputs
@@ -860,7 +860,7 @@ CORS_ALLOWED_ORIGINS=https://yourfrontend.com
 Run the test suite to verify all endpoints:
 
 ```bash
-python manage.py test accounts
+pytest tests/ -v
 ```
 
 The test suite includes:
@@ -876,7 +876,7 @@ The test suite includes:
 
 This authentication module provides the foundation for other backend modules:
 
-- **Crops Module (Developer 2):** Use `@permission_classes([IsAuthenticated])` to protect crop endpoints
+- **Crops Module (Developer 2):** Use `@jwt_required()` to protect crop endpoints
 - **Livestock & Health Module (Developer 3):** Integrate with authentication and check user roles
 - **Finance Module (Developer 4):** Protect financial data with JWT authentication
 - **Inventory Module (Developer 5):** Require authentication for inventory management
@@ -885,21 +885,22 @@ This authentication module provides the foundation for other backend modules:
 ### Integration Example
 
 ```python
-from rest_framework import permissions
-from rest_framework.decorators import permission_classes
-from accounts.permissions import IsAdminUser, IsOwnerOrAdmin
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required
+from routes.helpers import get_current_user, admin_required
 
-@permission_classes([IsAuthenticated])
-class CropViewSet(viewsets.ModelViewSet):
+bp = Blueprint("crops", __name__, url_prefix="/api/crops")
+
+@bp.route("/", methods=["GET"])
+@jwt_required()
+def list_crops():
+    user = get_current_user()
     # Your crop management logic here
 
-@permission_classes([IsAdminUser])
-class AdminOnlyView(APIView):
+@bp.route("/admin/", methods=["GET"])
+@admin_required
+def admin_crops():
     # Admin-only functionality
-
-@permission_classes([IsOwnerOrAdmin])
-class UserResourceView(APIView):
-    # Users can only access their own resources, admins can access all
 ```
 
 ---
@@ -907,17 +908,30 @@ class UserResourceView(APIView):
 ## Project Structure
 
 ```
-accounts/
-├── admin.py              # Django admin configuration
-├── apps.py               # App configuration
-├── models.py             # Custom User model
-├── serializers.py        # DRF serializers
-├── permissions.py        # Custom permission classes
-├── views.py              # API views
-├── urls.py               # URL routing
-├── tests.py              # Automated tests
-├── migrations/           # Database migrations
-└── __init__.py
+GreenFarm_Management_Backend/
+├── app.py                  # Flask application factory
+├── config.py               # Flask configuration
+├── extensions.py           # Flask extensions (db, jwt, cors)
+├── models.py               # SQLAlchemy models
+├── run.py                  # Application entry point
+├── requirements.txt        # Python dependencies
+├── Pipfile                 # Pipfile for dependency management
+├── routes/
+│   ├── __init__.py         # Route registration
+│   ├── auth.py             # Authentication routes
+│   ├── helpers.py          # Helper functions and decorators
+│   ├── expenses.py         # Expense management routes
+│   ├── health_records.py   # Health records routes
+│   ├── income.py           # Income management routes
+│   ├── inventory.py        # Inventory management routes
+│   └── livestock.py        # Livestock management routes
+├── tests/
+│   ├── __init__.py
+│   ├── conftest.py         # Test fixtures
+│   └── test_auth.py        # Authentication tests
+├── AUTH_API_DOCUMENTATION.md
+├── DEVELOPER1_DELIVERABLES.md
+└── README.md
 ```
 
 ---
@@ -939,15 +953,16 @@ accounts/
 
 ## Technologies Used
 
-- **Django 4.2.7** - Web framework
-- **Django REST Framework 3.14.0** - API framework
-- **Django REST Framework SimpleJWT 5.3.0** - JWT authentication
-- **Django CORS Headers 4.3.1** - CORS support
+- **Flask 3.0.0** - Web framework
+- **Flask-SQLAlchemy 3.1.1** - ORM for database operations
+- **Flask-JWT-Extended 6.0.0** - JWT authentication
+- **Flask-CORS 4.0.0** - CORS support
+- **Werkzeug** - Password hashing
 - **PostgreSQL** - Production database (SQLite for development)
-- **Python 3.x** - Programming language
+- **Python 3.12** - Programming language
 
 ---
 
 ## Support
 
-For issues or questions related to this authentication module, please contact Developer 1 or refer to the Django REST Framework and SimpleJWT documentation.
+For issues or questions related to this authentication module, please contact Developer 1 or refer to the Flask and Flask-JWT-Extended documentation.

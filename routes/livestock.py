@@ -73,5 +73,8 @@ def create_livestock():
     
     # Add the new animal to the database session (staging for saving)
     db.session.add(animal)
-    # Note: The code doesn't show it, but db.session.commit() would be needed
-    # to actually save to the database (this might be handled elsewhere)
+    # Commit the transaction to save to the database
+    db.session.commit()
+    
+    # Return the created animal data with 201 Created status
+    return jsonify(animal.to_dict()), 201
