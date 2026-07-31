@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from config import Config
 from extensions import db, migrate, jwt, bcrypt, cors
+import os
 
 def create_app():
     app = Flask(__name__)
@@ -15,7 +16,12 @@ def create_app():
     # Configure CORS - allow frontend origins
     cors.init_app(app, resources={
         r"/api/*": {
-            "origins": ["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"],
+            "origins": [
+                "http://localhost:5173", 
+                "http://localhost:3000", 
+                "http://127.0.0.1:5173",
+                os.environ.get('FRONTEND_ORIGIN', 'https://starfish-app-qjq8s.ondigitalocean.app')
+            ],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization", "Accept"],
             "expose_headers": ["Content-Type", "Authorization"],
@@ -51,7 +57,11 @@ def create_app():
 
     @app.get("/api/health")
     def health_check():
-        return jsonify({"status": "ok", "service": "GreenHarvest API"})
+        return jsonify({
+            "status": "ok", 
+            "service": "GreenHarvest API",
+            "environment": os.environ.get('FLASK_ENV', 'development')
+        })
 
     @app.errorhandler(404)
     def not_found(e):
@@ -63,9 +73,12 @@ def create_app():
 
     return app
 
+# Create app instance
 app = create_app()
 
 if __name__ == "__main__":
     with app.app_context():
         db.create_all()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Use PORT from environment variable for production
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)

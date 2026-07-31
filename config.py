@@ -1,13 +1,25 @@
 import os
 from dotenv import load_dotenv
 
+# Load environment variables from .env file (only for local development)
 load_dotenv()
 
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///greenharvest.db'
+    # Security
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'jwt-dev-secret-key-change-in-production')
+    
+    # Database
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///greenharvest.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'jwt-secret-key-change-in-production'
-    JWT_VERIFY_SUB = False
-    JWT_ACCESS_TOKEN_EXPIRES = 3600  # 1 hour
-    FRONTEND_ORIGIN = os.environ.get('FRONTEND_ORIGIN') or 'http://localhost:3000'
+    
+    # JWT Settings
+    JWT_ACCESS_TOKEN_EXPIRES = int(os.environ.get('JWT_ACCESS_TOKEN_EXPIRES', 3600))
+    JWT_REFRESH_TOKEN_EXPIRES = int(os.environ.get('JWT_REFRESH_TOKEN_EXPIRES', 86400))
+    
+    # CORS
+    FRONTEND_ORIGIN = os.environ.get('FRONTEND_ORIGIN', 'http://localhost:3000')
+    
+    # Environment
+    FLASK_ENV = os.environ.get('FLASK_ENV', 'development')
+    DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
