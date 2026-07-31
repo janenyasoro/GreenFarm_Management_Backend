@@ -3,6 +3,7 @@ from config import Config
 from extensions import db, migrate, jwt, bcrypt, cors
 import os
 
+
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
@@ -32,7 +33,7 @@ def create_app():
     # Import models so Flask-Migrate can detect them
     import models  # noqa: F401
 
-    # Register blueprints
+    # Register blueprints (ALL imports and registrations INSIDE the function)
     from routes.auth import auth_bp
     from routes.crops import crops_bp
     from routes.livestock import livestock_bp
@@ -44,16 +45,16 @@ def create_app():
     from routes.dashboard import dashboard_bp
     from routes.admin import admin_bp
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(crops_bp)
-    app.register_blueprint(livestock_bp)
-    app.register_blueprint(health_bp)
-    app.register_blueprint(expenses_bp)
-    app.register_blueprint(income_bp)
-    app.register_blueprint(inventory_bp)
-    app.register_blueprint(tasks_bp)
-    app.register_blueprint(dashboard_bp)
-    app.register_blueprint(admin_bp)
+    app.register_blueprint(auth_bp, url_prefix='/api/auth')
+    app.register_blueprint(crops_bp, url_prefix='/api/crops')
+    app.register_blueprint(livestock_bp, url_prefix='/api/livestock')
+    app.register_blueprint(health_bp, url_prefix='/api/health')
+    app.register_blueprint(expenses_bp, url_prefix='/api/expenses')
+    app.register_blueprint(income_bp, url_prefix='/api/income')
+    app.register_blueprint(inventory_bp, url_prefix='/api/inventory')
+    app.register_blueprint(tasks_bp, url_prefix='/api/tasks')
+    app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
+    app.register_blueprint(admin_bp, url_prefix='/api/admin')
 
     @app.get("/api/health")
     def health_check():
@@ -72,6 +73,7 @@ def create_app():
         return jsonify({"error": "Internal server error"}), 500
 
     return app
+
 
 # Create app instance
 app = create_app()
