@@ -52,9 +52,13 @@ def register():
         
         db.session.add(user)
         db.session.commit()
-        
+
+        access_token = create_access_token(identity=user.id)
+
         return jsonify({
             "message": "User registered successfully",
+            "access_token": access_token,
+            "token_type": "Bearer",
             "user": user.to_dict()
         }), 201
         
