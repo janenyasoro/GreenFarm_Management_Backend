@@ -51,16 +51,16 @@ def create_app():
     from routes.dashboard import dashboard_bp
     from routes.admin import admin_bp
 
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(crops_bp, url_prefix='/api/crops')
-    app.register_blueprint(livestock_bp, url_prefix='/api/livestock')
-    app.register_blueprint(health_bp, url_prefix='/api/health')
-    app.register_blueprint(expenses_bp, url_prefix='/api/expenses')
-    app.register_blueprint(income_bp, url_prefix='/api/income')
-    app.register_blueprint(inventory_bp, url_prefix='/api/inventory')
-    app.register_blueprint(tasks_bp, url_prefix='/api/tasks')
-    app.register_blueprint(dashboard_bp, url_prefix='/api/dashboard')
-    app.register_blueprint(admin_bp, url_prefix='/api/admin')
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(crops_bp)
+    app.register_blueprint(livestock_bp)
+    app.register_blueprint(health_bp)
+    app.register_blueprint(expenses_bp)
+    app.register_blueprint(income_bp)
+    app.register_blueprint(inventory_bp)
+    app.register_blueprint(tasks_bp)
+    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(admin_bp)
 
     # Health check endpoint
     @app.route('/api/health', methods=['GET'])
@@ -71,6 +71,13 @@ def create_app():
             "service": "GreenHarvest API",
             "environment": os.environ.get('FLASK_ENV', 'development'),
             "version": "1.0.0"
+        })
+
+    @app.route('/', methods=['GET'])
+    def index():
+        return jsonify({
+            "message": "GreenHarvest API is running",
+            "health": "/api/health"
         })
 
     # Root endpoint to verify API is running
