@@ -40,7 +40,7 @@ def create_app():
     import models  # noqa: F401
 
     # Register blueprints
-    from routes.auth import auth_bp
+    from routes.auth import auth_bp, login as auth_login
     from routes.crops import crops_bp
     from routes.livestock import livestock_bp
     from routes.health_records import health_bp
@@ -61,6 +61,10 @@ def create_app():
     app.register_blueprint(tasks_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(admin_bp)
+
+    @app.route('/api/login', methods=['POST'])
+    def legacy_login():
+        return auth_login()
 
     # Health check endpoint
     @app.route('/api/health', methods=['GET'])

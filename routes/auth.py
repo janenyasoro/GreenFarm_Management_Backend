@@ -103,8 +103,11 @@ def login():
         
         return jsonify({
             "access_token": access_token,
+            "accessToken": access_token,
+            "token": access_token,
             "token_type": "Bearer",
-            "user": user.to_dict()
+            "user": user.to_dict(),
+            "user_id": user.id,
         }), 200
         
     except Exception as e:
