@@ -1,8 +1,36 @@
 import os
+import logging
 from dotenv import load_dotenv
+from sqlalchemy.engine import make_url
 
 # Load environment variables from .env file (only for local development)
 load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+
+def _resolve_database_uri():
+    database_url = os.environ.get('DATABASE_URL')
+    if not database_url:
+        return 'sqlite:///greenharvest.db'
+
+    database_url = database_url.strip()
+    if database_url.startswith('postgres://'):
+        database_url = 'postgresql://' + database_url[len('postgres://'):]
+
+    try:
+        make_url(database_url)
+    except Exception:
+        env = os.environ.get('FLASK_ENV', 'development').lower()
+        if env == 'development':
+            logger.warning('Invalid DATABASE_URL detected; falling back to sqlite:///greenharvest.db')
+            return 'sqlite:///greenharvest.db'
+        raise RuntimeError(
+            'Invalid DATABASE_URL. Set it to a valid PostgreSQL URL such as '
+            'postgresql://user:password@host:5432/database_name'
+        )
+
+    return database_url
 
 class Config:
     # Security
@@ -10,7 +38,7 @@ class Config:
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'jwt-dev-secret-key-change-in-production')
     
     # Database
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///greenharvest.db')
+    SQLALCHEMY_DATABASE_URI = _resolve_database_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # JWT Settings
