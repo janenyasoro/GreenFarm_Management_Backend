@@ -46,7 +46,7 @@ class Config:
     JWT_REFRESH_TOKEN_EXPIRES = int(os.environ.get('JWT_REFRESH_TOKEN_EXPIRES', 86400))
     
     # CORS
-    FRONTEND_ORIGIN = os.environ.get('FRONTEND_ORIGIN', 'http://localhost:3000')
+    FRONTEND_ORIGIN = os.environ.get('FRONTEND_ORIGIN', 'https://greenfarm-management-frontend.onrender.com')
     
     # Environment
     FLASK_ENV = os.environ.get('FLASK_ENV', 'development')

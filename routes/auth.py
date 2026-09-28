@@ -21,8 +21,9 @@ def register():
         # Get fields from request
         full_name = data.get('full_name')
         email = data.get('email')
+        email = email.strip().lower() if isinstance(email, str) else email
         password = data.get('password')
-        role = data.get('role', 'owner')
+        role = 'FARM_OWNER'  # Public registration cannot grant elevated roles.
         
         # Validate required fields
         if not full_name:
@@ -38,7 +39,7 @@ def register():
             return jsonify({"error": "Password must be at least 6 characters"}), 400
         
         # Check if user already exists
-        if User.query.filter_by(email=email).first():
+        if User.query.filter(db.func.lower(User.email) == email).first():
             return jsonify({"error": "Email already registered"}), 400
         
         # Create new user
@@ -164,8 +165,7 @@ def update_profile():
                 return jsonify({"error": "Email already in use"}), 400
             user.email = data['email']
         
-        if 'role' in data:
-            user.role = data['role']
+        # Role changes are restricted to the admin management API.
         
         db.session.commit()
         
@@ -253,7 +253,7 @@ def activate_account(user_id):
         current_user_id = get_user_id()
         current_user = User.query.get(current_user_id)
         
-        if not current_user or current_user.role not in ['admin', 'owner']:
+        if not current_user or current_user.role not in ['admin', 'ADMIN']:
             return jsonify({"error": "Admin access required"}), 403
         
         user = User.query.get(user_id)
@@ -284,7 +284,7 @@ def list_users():
         current_user_id = get_user_id()
         current_user = User.query.get(current_user_id)
         
-        if not current_user or current_user.role not in ['admin', 'owner']:
+        if not current_user or current_user.role not in ['admin', 'ADMIN']:
             return jsonify({"error": "Admin access required"}), 403
         
         users = User.query.all()

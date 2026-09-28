@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
 from extensions import db
 from models import Livestock, Farm
-from .helpers import get_user_id, parse_date  # Import helper functions
+from .helpers import get_user_id, get_current_farm, parse_date  # Import helper functions
 from datetime import datetime
 
 livestock_bp = Blueprint('livestock', __name__, url_prefix='/api/livestock')
@@ -20,7 +20,7 @@ def get_livestock():
         print(f"👤 User ID: {user_id}")
         
         # Get user's farm
-        farm = Farm.query.filter_by(owner_id=user_id).first()
+        farm = get_current_farm()
         if not farm:
             print("❌ No farm found for user")
             return jsonify([])  # Return empty list instead of error
@@ -60,7 +60,7 @@ def create_livestock():
             return jsonify({"error": "animal_type or type is required"}), 400
         
         # Get user's farm
-        farm = Farm.query.filter_by(owner_id=user_id).first()
+        farm = get_current_farm()
         if not farm:
             print("❌ No farm found for user")
             return jsonify({"error": "No farm found for this user. Please create a farm first."}), 404
@@ -104,7 +104,7 @@ def get_livestock_by_id(livestock_id):
             return jsonify({"error": "Invalid user identity"}), 400
         
         # Get user's farm
-        farm = Farm.query.filter_by(owner_id=user_id).first()
+        farm = get_current_farm()
         if not farm:
             return jsonify({"error": "No farm found"}), 404
         
@@ -134,7 +134,7 @@ def update_livestock(livestock_id):
             return jsonify({"error": "No data provided"}), 400
         
         # Get user's farm
-        farm = Farm.query.filter_by(owner_id=user_id).first()
+        farm = get_current_farm()
         if not farm:
             return jsonify({"error": "No farm found"}), 404
         
@@ -176,7 +176,7 @@ def delete_livestock(livestock_id):
             return jsonify({"error": "Invalid user identity"}), 400
         
         # Get user's farm
-        farm = Farm.query.filter_by(owner_id=user_id).first()
+        farm = get_current_farm()
         if not farm:
             return jsonify({"error": "No farm found"}), 404
         
@@ -205,7 +205,7 @@ def get_livestock_summary():
             return jsonify({"error": "Invalid user identity"}), 400
         
         # Get user's farm
-        farm = Farm.query.filter_by(owner_id=user_id).first()
+        farm = get_current_farm()
         if not farm:
             return jsonify({"error": "No farm found"}), 404
         
@@ -252,7 +252,7 @@ def debug_livestock():
             print("❌ User not found!")
         
         # Check if farm exists
-        farm = Farm.query.filter_by(owner_id=user_id).first() if user_id else None
+        farm = get_current_farm() if user_id else None
         if farm:
             print(f"🏠 Farm found: {farm.name} (ID: {farm.id})")
         else:

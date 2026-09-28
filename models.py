@@ -10,12 +10,14 @@ class User(db.Model):
     full_name = db.Column(db.String(120), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
-    role = db.Column(db.String(20), nullable=False, default="owner")  # owner | admin | worker
+    role = db.Column(db.String(20), nullable=False, default="FARM_OWNER")
+    # Workers are attached to one farm; owners are related through Farm.owner_id.
+    farm_id = db.Column(db.Integer, nullable=True, index=True)  # Validated against Farm when assigned.
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
-    farms = db.relationship("Farm", backref="owner", lazy=True, cascade="all, delete-orphan")
+    farms = db.relationship("Farm", foreign_keys="Farm.owner_id", backref="owner", lazy=True)
 
     def to_dict(self):
         """Convert user object to dictionary"""
@@ -23,7 +25,8 @@ class User(db.Model):
             "id": self.id,
             "full_name": self.full_name,
             "email": self.email,
-            "role": self.role,
+            "role": {"admin": "ADMIN", "owner": "FARM_OWNER", "worker": "FARM_WORKER"}.get(self.role, self.role),
+            "farm_id": self.farm_id,
             "is_active": self.is_active,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
@@ -36,7 +39,8 @@ class Farm(db.Model):
     name = db.Column(db.String(120), nullable=False)
     location = db.Column(db.String(200))
     size_acres = db.Column(db.Float)
-    owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    owner_id = db.Column(db.Integer, db.ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -55,6 +59,8 @@ class Farm(db.Model):
             "location": self.location,
             "size_acres": self.size_acres,
             "owner_id": self.owner_id,
+            "size": self.size_acres,
+            "is_active": self.is_active,
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 

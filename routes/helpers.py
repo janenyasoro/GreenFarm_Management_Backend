@@ -1,4 +1,5 @@
 from flask_jwt_extended import get_jwt_identity
+from flask import request
 from extensions import db
 from models import Farm, User
 
@@ -21,12 +22,23 @@ def get_current_farm():
     if not user_id:
         return None
 
-    farm = Farm.query.filter_by(owner_id=user_id).first()
+    user = User.query.get(user_id)
+    if not user:
+        return None
+    role = {"admin": "ADMIN", "owner": "FARM_OWNER", "worker": "FARM_WORKER"}.get(user.role, user.role)
+    requested_farm_id = request.args.get("farm_id")
+    if role == "ADMIN" and requested_farm_id:
+        try:
+            return Farm.query.filter_by(id=int(requested_farm_id), is_active=True).first()
+        except (TypeError, ValueError):
+            return None
+    if role == "FARM_WORKER" and user.farm_id:
+        return Farm.query.filter_by(id=user.farm_id, is_active=True).first()
+    farm = Farm.query.filter_by(owner_id=user_id, is_active=True).first()
     if farm:
         return farm
 
-    user = User.query.get(user_id)
-    if not user:
+    if role in ("ADMIN", "FARM_WORKER"):
         return None
 
     farm = Farm(

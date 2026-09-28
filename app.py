@@ -18,6 +18,32 @@ def create_app():
     migrate.init_app(app, db)
     jwt.init_app(app)
     bcrypt.init_app(app)
+
+    @jwt.unauthorized_loader
+    def missing_token(_reason):
+        return jsonify({"message": "Authentication is required."}), 401
+
+    @jwt.invalid_token_loader
+    def invalid_token(_reason):
+        return jsonify({"message": "The authentication token is invalid."}), 401
+
+    @jwt.expired_token_loader
+    def expired_token(_jwt_header, _jwt_payload):
+        return jsonify({"message": "The authentication token has expired."}), 401
+
+    @jwt.token_verification_loader
+    def active_account_required(_jwt_header, jwt_payload):
+        from models import User
+        try:
+            user_id = int(jwt_payload.get("sub"))
+        except (TypeError, ValueError):
+            return False
+        user = db.session.get(User, user_id)
+        return bool(user and user.is_active)
+
+    @jwt.token_verification_failed_loader
+    def inactive_account(_jwt_header, _jwt_payload):
+        return jsonify({"message": "This account is inactive or no longer exists."}), 401
     
     # Configure CORS - allow frontend origins
     cors.init_app(app, resources={
@@ -26,10 +52,11 @@ def create_app():
                 "http://localhost:5173", 
                 "http://localhost:3000", 
                 "http://127.0.0.1:5173",
-                os.environ.get('FRONTEND_ORIGIN', 'https://starfish-app-qjq8s.ondigitalocean.app'),
+                os.environ.get('FRONTEND_ORIGIN', 'https://greenfarm-management-frontend.onrender.com'),
+                "https://greenfarm-management-frontend.onrender.com",
                 "https://starfish-app-qjq8s.ondigitalocean.app"
             ],
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization", "Accept"],
             "expose_headers": ["Content-Type", "Authorization"],
             "supports_credentials": True
@@ -102,7 +129,7 @@ def create_app():
                 "/api/inventory",
                 "/api/tasks",
                 "/api/dashboard",
-                "/api/admin"
+                "/api/v1/admin"
             ]
         })
 
